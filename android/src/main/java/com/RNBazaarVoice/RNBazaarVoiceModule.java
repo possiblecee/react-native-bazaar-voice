@@ -193,19 +193,43 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
     }
   }
 
-  @ReactMethod public void getProductsStats(
-      List<String> productIds, String locale, final Promise promise) {
+@ReactMethod public void getProductsStats(
+          ReadableArray productIds, String locale, final Promise promise) {
+    List<String> products = new ArrayList<String>();
+    for (int i = 0; i < productIds.size(); i++) {
+        products.add(productIds.getString(i));
+    }
+
     BulkRatingsRequest request =
-        new BulkRatingsRequest.Builder(productIds, BulkRatingOptions.StatsType.All).addFilter(
-            BulkRatingOptions.Filter.ContentLocale,
-            EqualityOperator.EQ,
-            locale).build();
+    new BulkRatingsRequest.Builder(products, BulkRatingOptions.StatsType.All).addFilter(
+        BulkRatingOptions.Filter.ContentLocale,
+        EqualityOperator.EQ,
+        locale).build();
     try {
-      BulkRatingsResponse response = client.prepareCall(request).loadSync();
-      Log.w(TAG, "getProductsReviews: " + gson.toJson(response));
-      promise.resolve(toReactArray(response.getResults()));
+        BulkRatingsResponse response = client.prepareCall(request).loadSync();
+        List<HashMap> responseList = new ArrayList<HashMap>();
+
+        for (Statistics stats : response.getResults()) {
+            String productId = "";
+            Float avgRating = Float.NaN;
+            ProductStatistics productStats = stats.getProductStatistics();
+            HashMap product = new HashMap();
+            if (productStats != null) {
+                productId = productStats.getProductId();
+                ReviewStatistics reviewStats = productStats.getReviewStatistics();
+                if (reviewStats != null) {
+                    avgRating = reviewStats.getAverageOverallRating();
+                }
+            }
+            product.put("productId", productId);
+            product.put("averageOverallRating", avgRating);
+            responseList.add(product);
+        }
+
+        Log.w(TAG, "getProductsReviews: " + gson.toJson(responseList));
+        promise.resolve(jsonToReact(new JSONArray(gson.toJson(responseList))));
     } catch (BazaarException | JSONException e) {
-      e.printStackTrace();
+        e.printStackTrace();
     }
   }
 
