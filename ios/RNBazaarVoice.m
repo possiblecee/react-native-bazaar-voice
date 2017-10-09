@@ -53,8 +53,24 @@ RCT_EXPORT_METHOD(getProductReviewsWithId:(NSString *)productId andLimit:(int)li
 
 RCT_EXPORT_METHOD(getProductsStats:(NSArray *)productIds andLocale:(NSString*)locale withResolver:(RCTPromiseResolveBlock)resolve andRejecter:(RCTResponseSenderBlock)reject) {
     BVBulkRatingsRequest* request = [[BVBulkRatingsRequest alloc] initWithProductIds:productIds statistics:BulkRatingsStatsTypeAll];
+    [request addFilter:BVBulkRatingsFilterTypeContentLocale filterOperator:BVFilterOperatorEqualTo values:@[locale]];
     [request load:^(BVBulkRatingsResponse * _Nonnull response) {
-        resolve(response.results);
+        NSArray* ratings = response.results;
+        NSMutableArray* results = [[NSMutableArray alloc] init];
+        
+        for (BVProductStatistics* rating in ratings) {
+            NSMutableDictionary* product = [[NSMutableDictionary alloc]init];
+            NSString* productId = rating.productId;
+            NSNumber* averageOverallRating = rating.reviewStatistics.averageOverallRating;
+            
+            [product setObject:productId forKey:@"productId"];
+            [product setObject:averageOverallRating forKey:@"averageOverallRating"];
+            
+            [results addObject:product];
+        }
+        
+        resolve(results);
+        
     } failure:^(NSArray * _Nonnull errors) {
         reject(errors);
     }];
