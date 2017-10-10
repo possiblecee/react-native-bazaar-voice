@@ -143,7 +143,9 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 -(NSArray *)parseReviews:(NSArray*)results {
     NSMutableArray *reviews = [NSMutableArray new];
     for (BVReview *review in results) {
-        [reviews addObject:[self jsonFromReview:review]];
+        if ([review.moderationStatus isEqualToString:@"APPROVED"] || review.moderationStatus == nil) {
+            [reviews addObject:[self jsonFromReview:review]];
+        }
     }
     return reviews;
 }
