@@ -227,9 +227,10 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
         }
 
         Log.w(TAG, "getProductsReviews: " + gson.toJson(responseList));
-        promise.resolve(jsonToReact(new JSONArray(gson.toJson(responseList))));
+        promise.resolve(toReactArray(responseList));
     } catch (BazaarException | JSONException e) {
         e.printStackTrace();
+        promise.reject(e);
     }
   }
 
