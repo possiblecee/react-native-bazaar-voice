@@ -62,9 +62,11 @@ RCT_EXPORT_METHOD(getProductsStats:(NSArray *)productIds andLocale:(NSString*)lo
             NSMutableDictionary* product = [[NSMutableDictionary alloc]init];
             NSString* productId = rating.productId;
             NSNumber* averageOverallRating = rating.reviewStatistics.averageOverallRating;
+            NSNumber* totalReviewCount = rating.reviewStatistics.totalReviewCount;
             
             [product setObject:productId forKey:@"productId"];
             [product setObject:averageOverallRating forKey:@"averageOverallRating"];
+            [product setObject:totalReviewCount forKey:@"totalReviewCount"];
             
             [results addObject:product];
         }
@@ -143,7 +145,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 -(NSArray *)parseReviews:(NSArray*)results {
     NSMutableArray *reviews = [NSMutableArray new];
     for (BVReview *review in results) {
-        if ([review.moderationStatus isEqualToString:@"APPROVED"] || review.moderationStatus == nil) {
+        if ([review.moderationStatus isEqualToString:@"APPROVED"]) {
             [reviews addObject:[self jsonFromReview:review]];
         }
     }
