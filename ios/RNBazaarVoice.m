@@ -86,13 +86,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
     
     NSString *title = [review objectForKey:@"title"];
     NSString *text = [review objectForKey:@"text"];
-    int comfort = [[review valueForKey:@"comfort"] intValue];
-    int size = [[review valueForKey:@"size"] intValue];
     int rating = [[review valueForKey:@"rating"] intValue];
-    int quality = [[review valueForKey:@"quality"] intValue];
-    int width = [[review valueForKey:@"width"] intValue];
-    bool isRecommended = [user objectForKey:@"isRecommended"];
-    
     BVReviewSubmission* bvReview = [[BVReviewSubmission alloc] initWithReviewTitle:title
                                                                         reviewText:text
                                                                             rating:rating
@@ -103,11 +97,27 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
     bvReview.user = token;
     bvReview.userEmail = email;
     bvReview.sendEmailAlertWhenPublished = [NSNumber numberWithBool:sendEmailAlertWhenPublished];
-    bvReview.isRecommended = [NSNumber numberWithBool:isRecommended];
-    [bvReview addRatingQuestion:@"Comfort" value:comfort];
-    [bvReview addRatingQuestion:@"Size" value:size];
-    [bvReview addRatingQuestion:@"Quality" value:quality];
-    [bvReview addRatingQuestion:@"Width" value:width];
+
+    if ([review valueForKey:@"comfort"]) {
+        int comfort = [[review valueForKey:@"comfort"] intValue];
+        [bvReview addRatingQuestion:@"Comfort" value:comfort];
+    }
+    
+    if ([review valueForKey:@"size"]) {
+        int size = [[review valueForKey:@"size"] intValue];
+        [bvReview addRatingQuestion:@"Size" value:size];
+    }
+
+    if ([review valueForKey:@"quality"]) {
+        int quality = [[review valueForKey:@"quality"] intValue];
+        [bvReview addRatingQuestion:@"Quality" value:quality];
+    }
+    
+    if ([review valueForKey:@"width"]) {
+        int width = [[review valueForKey:@"width"] intValue];
+        [bvReview addRatingQuestion:@"Width" value:width];
+    }
+    
     [bvReview addAdditionalField:@"Avatar" value:profilePicture];
     [bvReview submit:^(BVReviewSubmissionResponse * _Nonnull response) {
         NSMutableDictionary *result = [NSMutableDictionary new];
@@ -155,10 +165,14 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
     [dictionary setValue:review.identifier forKey:@"reviewId"];
     [dictionary setValue:review.submissionId forKey:@"submissionId"];
     [dictionary setValue:review.productId forKey:@"productId"];
-    [dictionary setObject:review.title forKey:@"title"];
     [dictionary setObject:review.userNickname forKey:@"nickname"];
-    [dictionary setObject:review.reviewText forKey:@"reviewText"];
     [dictionary setObject:review.contentLocale forKey:@"locale"];
+    if (review.title) {
+        [dictionary setObject:review.title forKey:@"title"];
+    }
+    if (review.reviewText) {
+        [dictionary setObject:review.reviewText forKey:@"reviewText"];
+    }
     
     NSDateFormatter* dateFormatter = [NSDateFormatter new];
     dateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssxxx";
