@@ -1,5 +1,6 @@
 package com.RNBazaarVoice;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.bazaarvoice.bvandroidsdk.Action;
@@ -80,7 +81,7 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
         return writableMap;
     }
 
-    private static WritableArray jsonToReact(JSONArray jsonArray) throws JSONException {
+    private static WritableArray jsonToReact(@NonNull JSONArray jsonArray) throws JSONException {
         WritableArray writableArray = Arguments.createArray();
         for (int i = 0; i < jsonArray.length(); i++) {
             Object value = jsonArray.get(i);
@@ -116,40 +117,50 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
         return jsonToReact(changeReviewsRafaWay(new JSONArray(gson.toJson(list))));
     }
 
+    @NonNull
     private static JSONArray changeReviewsRafaWay(JSONArray reviews) {
         for (int i = 0; i < reviews.length(); i++) {
-            JSONObject reviewMap = null;
+            JSONObject reviewMap;
             try {
                 reviewMap = reviews.getJSONObject(i);
-                extraName(reviewMap, "AuthorId", "userUuid");
-                extraName(reviewMap, "Id", "reviewId");
-                extraName(reviewMap, "UserNickname", "nickname");
-                extraName(reviewMap, "ContentLocale", "locale");
-                extraName(reviewMap, "SubmissionId", "submissionId");
-                extraName(reviewMap, "ProductId", "productId");
-                extraName(reviewMap, "Title", "title");
-                extraName(reviewMap, "ReviewText", "reviewText");
-                extraName(reviewMap, "Rating", "rating");
-                try {
-                    reviewMap.put("date",
-                            simpleDateFormat.parse(reviewMap.getString("SubmissionTime")).toString());
-                } catch (ParseException e) {
-                    extraName(reviewMap, "SubmissionTime", "date");
-                }
+            } catch (JSONException e) {
+                return new JSONArray();
+            }
+            extraName(reviewMap, "AuthorId", "userUuid");
+            extraName(reviewMap, "Id", "reviewId");
+            extraName(reviewMap, "UserNickname", "nickname");
+            extraName(reviewMap, "ContentLocale", "locale");
+            extraName(reviewMap, "SubmissionId", "submissionId");
+            extraName(reviewMap, "ProductId", "productId");
+            extraName(reviewMap, "Title", "title");
+            extraName(reviewMap, "ReviewText", "reviewText");
+            extraName(reviewMap, "Rating", "rating");
+            try {
+                reviewMap.put("date",
+                        simpleDateFormat.parse(reviewMap.getString("SubmissionTime")).toString());
+            } catch (ParseException | JSONException e) {
+                extraName(reviewMap, "SubmissionTime", "date");
+            }
+
+
+            try {
                 reviewMap.put("avatar",
                         reviewMap.getJSONObject("AdditionalFields").getJSONObject("Avatar").getString("Value"));
                 reviewMap.put("additionalFields", reviewMap.getJSONObject("AdditionalFields"));
                 reviewMap.getJSONObject("additionalFields").put("avatar", reviewMap.getString("avatar"));
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.w(TAG, "changeReviewsRafaWay: no Avatar for review no" + i);
             }
         }
         return reviews;
     }
 
-    private static JSONObject extraName(JSONObject bundle, String from, String to)
-            throws JSONException {
-        bundle.put(to, bundle.getString(from));
+    private static JSONObject extraName(JSONObject bundle, String from, String to) {
+        try {
+            bundle.put(to, bundle.getString(from));
+        } catch (JSONException e) {
+            Log.w(TAG, "extraName: cannot find name: " + from);
+        }
         return bundle;
     }
 
