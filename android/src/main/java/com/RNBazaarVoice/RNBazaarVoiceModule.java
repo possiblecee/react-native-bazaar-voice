@@ -34,7 +34,6 @@ import com.google.gson.Gson;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -212,28 +211,29 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
         locale).build();
     try {
         BulkRatingsResponse response = client.prepareCall(request).loadSync();
-        List<HashMap> responseList = new ArrayList<HashMap>();
+        WritableArray responseList = Arguments.createArray();
 
         for (Statistics stats : response.getResults()) {
-            String productId = "";
-            Float avgRating = Float.NaN;
             ProductStatistics productStats = stats.getProductStatistics();
-            HashMap product = new HashMap();
-            if (productStats != null) {
-                productId = productStats.getProductId();
-                ReviewStatistics reviewStats = productStats.getReviewStatistics();
-                if (reviewStats != null) {
-                    avgRating = reviewStats.getAverageOverallRating();
+            WritableMap product = Arguments.createMap();
+
+            product.putDouble("averageOverallRating", Float.NaN);
+                if (productStats != null) {
+
+                    product.putString("productId", productStats.getProductId());
+
+                    ReviewStatistics reviewStats = productStats.getReviewStatistics();
+                    if (reviewStats != null) {
+                      product.putDouble("averageOverallRating", reviewStats.getAverageOverallRating());
+                      product.putInt("totalReviewCount", reviewStats.getTotalReviewCount());
+                    }
                 }
-            }
-            product.put("productId", productId);
-            product.put("averageOverallRating", avgRating);
-            responseList.add(product);
+                responseList.pushMap(product);
         }
 
         Log.w(TAG, "getProductsReviews: " + gson.toJson(responseList));
-        promise.resolve(toReactArray(responseList));
-    } catch (BazaarException | JSONException e) {
+        promise.resolve(responseList);
+    } catch (BazaarException e) {
         e.printStackTrace();
         promise.reject(e);
     }
