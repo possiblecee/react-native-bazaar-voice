@@ -266,27 +266,38 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
     public void submitReview(
             ReadableMap review, String productId, ReadableMap user, final Promise promise) {
         ReviewSubmissionRequest.Builder previewSubmissionBuilder = new ReviewSubmissionRequest.Builder(
-                Action.Submit,
-                productId).locale(user.getString("locale"))
-                .userNickname(user.getString("nickname"))
-                .user(user.getString("token"))
-                .userEmail(user.getString("email"))
-                .sendEmailAlertWhenPublished(user.getBoolean("sendEmailAlertWhenPublished"))
-                .title(review.getString("title"))
-                .reviewText(review.getString("text"))
-                .rating(review.getInt("rating"))
-                .isRecommended(review.getBoolean("isRecommended"));
+                Action.Submit, productId);
+        if (user.hasKey("locale"))
+            previewSubmissionBuilder.locale(user.getString("locale"));
+        if (user.hasKey("nickname"))
+            previewSubmissionBuilder.userNickname(user.getString("nickname"));
+        if (user.hasKey("token"))
+            previewSubmissionBuilder.user(user.getString("token"));
+        if (user.hasKey("email"))
+            previewSubmissionBuilder.userEmail(user.getString("email"));
+        if (user.hasKey("sendEmailAlertWhenPublished"))
+            previewSubmissionBuilder.sendEmailAlertWhenPublished(user.getBoolean("sendEmailAlertWhenPublished"));
+        if (review.hasKey("title"))
+            previewSubmissionBuilder.title(review.getString("title"));
+        if (review.hasKey("text"))
+            previewSubmissionBuilder.reviewText(review.getString("text"));
+        if (review.hasKey("rating"))
+            previewSubmissionBuilder.rating(review.getInt("rating"));
+        if (review.hasKey("isRecommended"))
+            previewSubmissionBuilder.isRecommended(review.getBoolean("isRecommended"));
 
         final String[] additionalReviewIntProperties = new String[]{
                 "comfort", "size", "rating", "quality", "width"
         };
 
         for (String addRevKey : additionalReviewIntProperties) {
-            previewSubmissionBuilder.addRatingQuestion(ucFirstLetter(addRevKey),
-                    review.getInt(addRevKey));
+            if (review.hasKey(addRevKey))
+                previewSubmissionBuilder.addRatingQuestion(ucFirstLetter(addRevKey),
+                        review.getInt(addRevKey));
         }
 
-        previewSubmissionBuilder.addAdditionalField("Avatar", user.getString("profilePicture"));
+        if (user.hasKey("profilePicture"))
+            previewSubmissionBuilder.addAdditionalField("Avatar", user.getString("profilePicture"));
 
         try {
             ReviewSubmissionResponse response =
