@@ -64,9 +64,15 @@ RCT_EXPORT_METHOD(getProductsStats:(NSArray *)productIds andLocale:(NSString*)lo
             NSNumber* averageOverallRating = rating.reviewStatistics.averageOverallRating;
             NSNumber* totalReviewCount = rating.reviewStatistics.totalReviewCount;
             
-            [product setObject:productId forKey:@"productId"];
-            [product setObject:averageOverallRating forKey:@"averageOverallRating"];
-            [product setObject:totalReviewCount forKey:@"totalReviewCount"];
+            if (productId) {
+                [product setObject:productId forKey:@"productId"];
+            }
+            if (averageOverallRating) {
+                [product setObject:averageOverallRating forKey:@"averageOverallRating"];
+            }
+            if (totalReviewCount) {
+                [product setObject:totalReviewCount forKey:@"totalReviewCount"];
+            }
             
             [results addObject:product];
         }
@@ -99,7 +105,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
     bvReview.user = token;
     bvReview.userEmail = email;
     bvReview.sendEmailAlertWhenPublished = [NSNumber numberWithBool:sendEmailAlertWhenPublished];
-
+    
     if ([review valueForKey:@"comfort"]) {
         int comfort = [[review valueForKey:@"comfort"] intValue];
         [bvReview addRatingQuestion:@"Comfort" value:comfort];
@@ -109,7 +115,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
         int size = [[review valueForKey:@"size"] intValue];
         [bvReview addRatingQuestion:@"Size" value:size];
     }
-
+    
     if ([review valueForKey:@"quality"]) {
         int quality = [[review valueForKey:@"quality"] intValue];
         [bvReview addRatingQuestion:@"Quality" value:quality];
@@ -145,7 +151,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 -(NSArray *)parseReviews:(NSArray*)results {
     NSMutableArray *reviews = [NSMutableArray new];
     for (BVReview *review in results) {
-        if ([review.moderationStatus isEqualToString:@"APPROVED"]) {
+        if (review.moderationStatus && [review.moderationStatus isEqualToString:@"APPROVED"]) {
             [reviews addObject:[self jsonFromReview:review]];
         }
     }
@@ -155,7 +161,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 -(NSMutableArray *)filterReviewsByLocale:(NSArray*)reviews andLocale:(NSString*)locale {
     NSMutableArray *filteredReviews = [NSMutableArray new];
     for (NSDictionary *review in reviews) {
-        if ([[review objectForKey:@"locale"] isEqualToString:locale]) {
+        if ([review objectForKey:@"locale"] && [[review objectForKey:@"locale"] isEqualToString:locale]) {
             [filteredReviews addObject:review];
         }
     }
@@ -165,28 +171,42 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 
 - (NSMutableDictionary *)jsonFromReview:(BVReview *)review {
     NSMutableDictionary *dictionary = [NSMutableDictionary new];
-    [dictionary setValue:review.authorId forKey:@"userUuid"];
-    [dictionary setValue:review.identifier forKey:@"reviewId"];
-    [dictionary setValue:review.submissionId forKey:@"submissionId"];
-    [dictionary setValue:review.productId forKey:@"productId"];
-    [dictionary setObject:review.userNickname forKey:@"nickname"];
-    [dictionary setObject:review.contentLocale forKey:@"locale"];
+    
+    if (review.authorId) {
+        [dictionary setValue:review.authorId forKey:@"userUuid"];
+    }
+    if (review.identifier) {
+        [dictionary setValue:review.identifier forKey:@"reviewId"];
+    }
+    if (review.submissionId) {
+        [dictionary setValue:review.submissionId forKey:@"submissionId"];
+    }
+    if (review.productId) {
+        [dictionary setValue:review.productId forKey:@"productId"];
+    }
+    if (review.userNickname) {
+        [dictionary setObject:review.userNickname forKey:@"nickname"];
+    }
+    if (review.contentLocale) {
+        [dictionary setObject:review.contentLocale forKey:@"locale"];
+    }
     if (review.title) {
         [dictionary setObject:review.title forKey:@"title"];
     }
     if (review.reviewText) {
         [dictionary setObject:review.reviewText forKey:@"reviewText"];
     }
-    
-    NSDateFormatter* dateFormatter = [NSDateFormatter new];
-    dateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssxxx";
-    [dateFormatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
-    dateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
-    NSString *date = [dateFormatter stringFromDate:review.submissionTime];
-    
-    [dictionary setObject:date forKey:@"date"];
-    [dictionary setObject:[NSNumber numberWithInteger:review.rating] forKey:@"rating"];
-    [dictionary setObject:@[review.additionalFields] forKey:@"additionalFields"];
+    if (review.submissionTime) {
+        NSDateFormatter* dateFormatter = [NSDateFormatter new];
+        dateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssxxx";
+        [dateFormatter setCalendar:[NSCalendar calendarWithIdentifier:NSCalendarIdentifierGregorian]];
+        dateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+        NSString *date = [dateFormatter stringFromDate:review.submissionTime];
+        
+        [dictionary setObject:date forKey:@"date"];
+        [dictionary setObject:[NSNumber numberWithInteger:review.rating] forKey:@"rating"];
+        [dictionary setObject:@[review.additionalFields] forKey:@"additionalFields"];
+    }
     
     NSDictionary *additionalField = review.additionalFields;
     if ([additionalField objectForKey:@"Avatar"]) {
@@ -199,3 +219,4 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 }
 
 @end
+
