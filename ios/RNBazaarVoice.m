@@ -128,7 +128,7 @@ RCT_EXPORT_METHOD(submitReview:(NSDictionary *)review fromProduct:(NSString *)pr
 
     if ([review valueForKey:@"campaignId"]) {
         NSString *campaignId = [review valueForKey:@"campaignId"];
-        [bvReview addRatingQuestion:@"campaignId" value:campaignId];
+        bvReview.campaignId = campaignId;
     }
     
     [bvReview addAdditionalField:@"Avatar" value:profilePicture];
