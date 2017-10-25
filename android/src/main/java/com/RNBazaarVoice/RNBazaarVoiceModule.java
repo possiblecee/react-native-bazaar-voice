@@ -267,6 +267,7 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
             ReadableMap review, String productId, ReadableMap user, final Promise promise) {
         ReviewSubmissionRequest.Builder previewSubmissionBuilder = new ReviewSubmissionRequest.Builder(
                 Action.Submit, productId);
+                
         if (user.hasKey("locale"))
             previewSubmissionBuilder.locale(user.getString("locale"));
         if (user.hasKey("nickname"))
@@ -285,6 +286,8 @@ public class RNBazaarVoiceModule extends ReactContextBaseJavaModule {
             previewSubmissionBuilder.rating(review.getInt("rating"));
         if (review.hasKey("isRecommended"))
             previewSubmissionBuilder.isRecommended(review.getBoolean("isRecommended"));
+        if (review.hasKey("campaignId"))
+            previewSubmissionBuilder.campaignId(review.getString("campaignId"));
 
         final String[] additionalReviewIntProperties = new String[]{
                 "comfort", "size", "rating", "quality", "width"
