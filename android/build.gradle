@@ -31,6 +31,6 @@ repositories {
 
 dependencies {
   compile 'com.facebook.react:react-native:+'
-  compile 'com.bazaarvoice.bvandroidsdk:conversations:6.+'
+  compile 'com.bazaarvoice.bvandroidsdk:conversations:6.14.2'
   compile 'com.google.code.gson:gson:2.8.1'
 }
